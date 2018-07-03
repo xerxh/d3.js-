@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+            /* 分别定义了类 axis 下的 path、line、text 元素的样式。
+            接下来，只需要将坐标轴的类设定为 axis 即可。 */
+            .axis path{
+                fill:none;
+                stroke: #1C86EE;
+                shape-rendering: crispEdges;
+            }
+            .axis line{
+                fill: none;
+                stroke: #FF34B3;
+                shape-rendering: crispEdges;
+            }
+            
+            .axis text {
+                font-family: sans-serif;
+                stroke:deepskyblue;
+                font-size: 11px;
+            }
+            .MyReact{
+                stroke: cornflowerblue;
+                fill:chartreuse;
+                opacity:0.5
+            }
+            .MyReact1{
+                stroke: cornflowerblue;
+                fill:palevioletred;
+                opacity:0.2
+            }
+            .MyText{
+                stroke: green;
+                /* fill:red; */
+                font-size: 12px;
+            }
+            .MyText1{
+                stroke: green;
+                /* fill:red; */
+                font-size: 12px;
+            }
+    </style>
+</head>
+<body>
+    
+    <script src="../js/d3.js"></script>
+    <script>
+        //  为画布周边留白  防止图形绘制到边界上
+        var padding = {left:50, right:50, top:50, bottom:50};
+        // 定义画布大小
+        var initWidth = 500,
+            initHeight = 500;
+        var height = initHeight - padding.top - padding.bottom;
+        var width = initWidth - padding.left - padding.right;
+        // 添加画布
+        var svg = d3.select("body")
+                    .append("svg")  // 添加到body中
+                    .attr("width",width)
+                    .attr("height",height)
+                    .style("padding-left",padding.left)
+                    .style("padding-right",padding.right)
+                    .style("padding-top",padding.top)
+                    .style("padding-bottom",padding.bottom);
+
+        //  定义数据组
+        const  line_data = [
+    {
+        country: "china",
+        gdp: [
+                [2008, 2033],
+                [2009, 2400],
+                [2010, 4333],
+                [2011, 5600],
+                [2012, 6900],
+                [2013, 6700],
+                [2014, 6933],
+                [2015, 5400],
+                [2016, 6233],
+                [2017, 7200]
+             ]
+    },
+    {
+        country: "japan",
+        gdp: [
+                [2008, 3333],
+                [2009, 4400],
+                [2010, 5233],
+                [2011, 5800],
+                [2012, 7333],
+                [2013, 6900],
+                [2014, 7333],
+                [2015, 6700],
+                [2016, 7033],
+                [2017, 8000]
+             ]
+    }
+
+];
+        var data = line_data;
+            // y轴
+        var  yData = [...data[0]["gdp"],...data[1]["gdp"]].map(function(item){
+            return item[1];
+        })
+        console.log(yData);
+        var y = d3.scaleLinear() // 定义比例尺
+                  .domain([0, d3.max(yData)])  // 定义域
+                  .range([height, 0]);      // 值域
+            _y = d3.scaleLinear()
+                   .domain([0, d3.max(yData)])
+                   .range([0, height]);
+            // 定义y轴
+        var yAxis = d3.axisLeft(y)
+                    // 把x,xxx 的数据计数方式格式化，转换为不带逗号的格式
+                      .tickFormat(d3.format("d"));
+            //  添加y轴
+        svg.append("g")  //添加分组元素
+           .attr("class","axis") // 为元素添加className
+           .attr("transform","translate(0,0)")
+           .call(yAxis);
+        // D3.scale.ordinal()  已被新版本移除
+        // var x = d3.scaleOrdinal() // x轴比例尺
+        //           .domain(d3.range(dataChart.length)) // 定义值域范围
+                   // 新版本移除 
+                  //   .rangeRoundBands([0, width - padding.left - padding.right]);  
+            
+            // X轴
+        // x轴比例尺
+        var xData = data[0]["gdp"].map(function(item){
+            return item[0];
+        });
+        console.log(xData)
+        var rectData = data[0]["gdp"].map(function(item){
+            return item[1];
+        });
+        var rectData1 = data[1]["gdp"].map(function(item){
+            return item[1];
+        });
+        // var x = d3.scaleBand()
+        //           .domain([2008,2017])
+        //           .rangeRound([0, width]);
+        var x = d3.scaleBand()
+                  .domain(xData)
+                //   .rangeRound([0, width]);  两种方法暂时没发现区别
+                  .range([0, width])
+        var _x = d3.scaleLinear()
+                   .domain([0, width])
+                   .rangeRound([2008,2017]);
+            //  定义X轴
+        var xAxis = d3.axisBottom(x) // x方向刻度向下
+                      .tickFormat(d3.format("d")); // 根据数据划分刻度
+            // xAxis = d3.svg.axis().scale(x).orient("bottom")
+            //  添加x轴
+        svg.append("g")
+           .attr("class","axis")
+           .attr("transform","translate(0,"+height+")")
+           .call(xAxis);
+           //   矩形之间的空间
+           console.log(x.bandwidth())
+        var rectPadding = 10;
+        createReact('MyReact',rectData,'MyText',15) // 柱形图1
+        createReact('MyReact1',rectData1,'MyText1',-3) // 柱形图2
+        function createReact(className,data,textClassName,textY){
+            svg.selectAll("."+className)
+            .data(data) // 绑定数据
+            .enter() // 自动添加元素
+            .append("rect")
+            .attr("class", className)
+            // 矩形的起点位置
+            .attr("transform","translate("+ 0+","+0+")")
+            // x 坐标位置
+            .attr("x",function(d, i){
+                console.log(i)
+            //    return 0;
+                return (i)*20+(i)*20+10; // 离圆点的距离
+            })
+        //    .attr("x",x.bandwidth()) 
+            // y 坐标位置
+            .attr("y",function(d, i){
+               console.log(d)
+            //    return y(d);
+                    console.log(data)
+                    console.log(y(d))
+                    return y(d);  // 根据比例尺Y位置向下偏移不一样的长度从而确定矩形图的高度
+            })
+        //    矩形的宽度
+        //    3.0  用法 4.0 和 5.0 以上不支持
+        //    .attr("width",x.rangeBand() - rectPadding)
+            .attr("width", x.bandwidth()- 8)
+            // 矩形的高度
+            .attr("height", function(d){
+                return height - y(d);  // 根据Y位置的不同 填充矩形图高度
+            })
+                    // 添加文字元素
+            svg.selectAll("."+textClassName)
+                .data(data)
+                .enter()
+                .append("text")
+                .attr("class",textClassName)
+                .attr("x", function(d, i){
+                    return (i)*20+(i)*20+10;
+                })
+                .attr("y",function(d, i){
+                    return y(d);
+                })
+                .attr("dx",function(){
+                    return  1; // 距离柱子左端的距离
+                })
+                .attr("dy",function(d, i){
+                    return textY;  // 距离矩形柱上端的距离
+                })
+                .text(function(d){
+                    return d;   // 文本内容
+                })
+        }
+        
+    </script>
+</body>
+</html>

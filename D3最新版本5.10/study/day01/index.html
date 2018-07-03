@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    /* 分别定义了类 axis 下的 path、line、text 元素的样式。
+    接下来，只需要将坐标轴的类设定为 axis 即可。 */
+    .axis path,
+    .axis line{
+        fill: none;
+        stroke: black;
+        shape-rendering: crispEdges;
+    }
+    
+    .axis text {
+        font-family: sans-serif;
+        font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <div id="d3Exercise">
+    <p>hello d3</p>
+    <p>hello d3</p>
+  </div>
+  <script src="../js/d3.js"></script>
+  <script>
+    var p = d3.select("#d3Exercise").selectAll("p").text("我是雷神托尔")
+    p.style("color","red").style("font-size","26px")
+    var chartData = [
+      {name:"张三",value:2.5},
+      {name:"李四",value:2.1},
+      {name:"王五",value:1.5},
+      {name:"赵六",value:0.7}
+    ];
+    var width = 500,
+        height = 500;
+        // 定义比例尺
+    var linear = d3.scaleLinear().domain([0,2.5]).range([0,300])   
+
+    var svg = d3.select('body').append('svg').attr("width",width).attr("height",height);
+    var rectHeight = 50;
+
+    // 定义坐标轴
+    var axis = d3.axisBottom(linear)
+      // 新版本不能使用
+      // .scale(linear) // 指定比例尺
+      // .orient("bottom") // 指定刻度的方向
+      // .ticks(7);    // 指定刻度的数量
+      
+    //向SVG中添加坐标轴
+    svg.append("g") // 添加分组元素 坐标轴其他元素放入分组元素下
+       .attr("class","axis") // 为内部分组元素添加className
+       .attr("transform","translate(100,200)") //调整坐标轴的位置
+       .call(axis);  // 将当前的选择集作为参数传给函数
+
+    svg.selectAll("rect").data(chartData).enter().append("rect").attr("x",100).attr("y",function(d, i){
+        return i*rectHeight;
+    }).attr("width",function (d, i) {
+      //return d.value;
+      return linear(d.value);  // 使用比例尺
+    }).attr("height",rectHeight-5).attr("fill","green");
+
+    svg.selectAll("text").data(chartData).enter().append("text").attr("x",50).attr("y", function (d, i) {
+      return i*rectHeight+25;
+    }).attr("width",function (d, i) {
+      return d.value;
+    }).attr("height",rectHeight-5).text(function(d, i){
+      return d.name;
+    }).style("fill","red");
+  </script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        body {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        margin: auto;
+        position: relative;
+        width: 960px;
+        }
+
+        form {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <form>
+        <label><input type="radio" name="mode" value="size"> Size</label>
+        <label><input type="radio" name="mode" value="count" checked> Count</label>
+    </form>
+    <script src="../js/d3.js"></script>
+    <script>
+        var width = 960, // 画布的宽度
+            height = 700, // 画布的高度
+            radius = Math.min(width, height) / 2, // 半径
+            color = d3.schemeSet3; // D3提供的颜色序列   12种颜色
+            console.log(color)
+        var svg = d3.select("body")
+                    .append("svg") // 向body添加svg画布
+                    // 添加宽高
+                    .attr("width", width)
+                    .attr("height", height)
+                    // 添加分组元素  指定分组元素位置
+                    .append("g") 
+                    .attr("transfform", "translate("+ width / 2 +","+height * 0.52 +")")
+                    // 3.v版本以前 布局方式api为 d3.layout.partition()
+        var partition = d3.partition() // 指定d3布局方式 
+                          //.sort(null)  // 不指定默为相关的输入数据的数值属性降序排列 比较器方法为null禁用排序 将采用树的遍历顺序
+                          // 指定size 通过二元数组[x,y]设置为有效布局的大小
+                          // 如果没有指定size，返回当前布局的大小,默认为1x1
+                          .size([2 * Math.PI, radius * radius]);
+        var arc = d3.arc()
+                    .startAngle(function (d) {return d.x;})
+                    .endAngle(function (d) {return d.x + d.dx;})
+                    .innerRadius(function(d) {return Math.sqrt(d.y);})
+                    .outerRadius(function(d) {return Math.sqrt(d.y + d.dy);})
+        d3.json("flare.json").then(function(root){
+            console.log(root);
+            console.log(partition)
+            var p = d3.hierarchy(root)
+                      .sum(function(d){return d.size;})
+                      .sort(function(a,b){return b.value - a.value}) 
+            console.log(p)
+            var path = svg.datum(root)
+                          .selectAll("path")
+                          .data(p)
+                          .enter()
+                          .append("path")
+                          .attr("display",function(d){
+                              console.log(d)
+                              return d.depth ? null : "none";
+                          })
+                          .attr("d",arc)
+                          .style("stroke", "#fff")
+                          .style("fill", function(d){
+                              return color((d.children ? d : d.parent).name);
+                          })
+                          .style("fill-rule", "evenodd")
+                          .each(stash)
+            d3.selectAll("input").on("change", function change(){
+                var value = this.value == "count" 
+                                        ? function () {return 1;}
+                                        : function (d) {return d.size}
+                path.data(partition.value(value).nodes)
+                    .transition()
+                    .duraction(1500)
+                    .attrTween("d", arcTween);
+            })
+        })
+        function stash(d){
+            d.x0 = d.x;
+            d.dx0 = d.dx;
+        }
+        function arcTween(a){
+            var i = d3.interpolate({x: a.x0, dx: a.dx0}, a);
+            return function(t) {
+                var b = i(t);
+                a.x0 = b.x;
+                a.dx0 = b.dx;
+                return arc(b);
+            }
+        }
+    </script>
+</body>
+</html>
