@@ -72,6 +72,7 @@ var texts = svg.selectAll(".MyText")
                .text(function (d) {
                    return d;
                })
+
 // 添加x轴
 svg.append("g")
    .attr("class", "axis")
