@@ -2,6 +2,7 @@
 var width = 400
 var height = 400
 //  添加画布
+
 var svg = d3.select("body")
             .append("svg")
             .attr("width", width)
